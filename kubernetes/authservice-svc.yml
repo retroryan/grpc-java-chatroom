@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 9091
+      name: grpc
+      targetPort: 9091
+  selector:
+    app: auth-service

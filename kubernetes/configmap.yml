@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  db-path: "/app"
+  zipkin-host: "http://zipkin"
+  zipkin-port: "9411"
+  auth-service-host: "auth-service"
+  auth-service-port: "9091"
+  chat-service-host: "chat-service"
+  chat-service-port: "9092"

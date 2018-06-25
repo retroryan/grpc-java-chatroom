@@ -1,0 +1,69 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: chat-service
+  labels:
+    app: chat-service
+    visualize: "true"
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-service
+  template:
+    metadata:
+      labels:
+        app: chat-service
+        version: v1
+        visualize: "true"
+    spec:
+      containers:
+      - name: chat-service
+        image: retroryan/chat-service-java:1.0
+        imagePullPolicy: Always
+        ports:
+        - name: grpc
+          containerPort: 9092
+        env:
+        - name: DB_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: db-path
+
+        - name: ZIPKIN_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: zipkin-host
+
+        - name: ZIPKIN_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: zipkin-port
+
+        - name: AUTH_SERVICE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: auth-service-host
+
+        - name: AUTH_SERVICE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: auth-service-port
+
+        - name: CHAT_SERVICE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: chat-service-host
+
+        - name: CHAT_SERVICE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: chat-service-port

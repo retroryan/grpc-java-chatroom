@@ -1,0 +1,62 @@
+/*
+ * Copyright 2016 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+package com.example.chat;
+
+message Empty {
+}
+
+message Room {
+    string name = 1;
+}
+
+enum MessageType {
+    JOIN = 0;
+    LEAVE = 1;
+    TEXT = 2;
+}
+
+message ChatMessage {
+    MessageType type = 1;
+    string roomName = 10;
+    string message = 11;
+}
+
+message ChatMessageFromServer {
+    google.protobuf.Timestamp timestamp = 1;
+    MessageType type = 2;
+
+    string roomName = 10;
+    string from = 11;
+    string message = 12;
+}
+
+service ChatRoomService {
+    rpc createRoom(Room) returns (Room);
+    rpc deleteRoom(Room) returns (Room);
+    rpc getRooms(Empty) returns (stream Room);
+}
+
+service ChatStreamService {
+    rpc chat(stream ChatMessage) returns (stream ChatMessageFromServer);
+}
+
