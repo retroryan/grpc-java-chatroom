@@ -206,7 +206,7 @@ public class ChatClient {
       if (this.state.status != ClientStatus.IN_ROOM) {
         logger.severe("error - not in a room");
       } else {
-        sendMessage(state.room, line);
+        sendMessage(state.username, state.room, line);
       }
     }
   }
@@ -286,10 +286,11 @@ public class ChatClient {
   /**
    * Send a message
    *
+   * @param username
    * @param room
    * @param message
    */
-  private void sendMessage(String room, String message) {
+  private void sendMessage(String username, String room, String message) {
     logger.info("sending chat message");
     // TODO call toServer.onNext(...)
     logger.severe("not implemented!");

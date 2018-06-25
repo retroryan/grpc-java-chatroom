@@ -69,7 +69,8 @@ public class ChatStreamServiceImpl extends ChatStreamServiceGrpc.ChatStreamServi
 
   @Override
   public StreamObserver<ChatMessage> chat(StreamObserver<ChatMessageFromServer> responseObserver) {
-    final String username = Constant.USER_ID_CTX_KEY.get();
+    // Not implemented until metadata and interceptors exercise
+    // final String username = Constant.USER_ID_CTX_KEY.get();
 
     return new StreamObserver<ChatMessage>() {
       @Override
