@@ -38,54 +38,84 @@ import java.util.logging.Logger;
  * Created by rayt on 6/27/17.
  */
 public class ChatStreamServiceImpl extends ChatStreamServiceGrpc.ChatStreamServiceImplBase {
-  private static final Logger logger = Logger.getLogger(ChatStreamServiceImpl.class.getName());
-  private final ChatRoomRepository repository;
-  //A mapping of room name to the set of stream observers for a room
-  private Map<String, Set<StreamObserver<ChatMessageFromServer>>> roomObservers = new ConcurrentHashMap<>();
+    private static final Logger logger = Logger.getLogger(ChatStreamServiceImpl.class.getName());
+    private final ChatRoomRepository repository;
+    //A mapping of room name to the set of stream observers for a room
+    private Map<String, Set<StreamObserver<ChatMessageFromServer>>> roomObservers = new ConcurrentHashMap<>();
 
-  public ChatStreamServiceImpl(ChatRoomRepository repository) {
-    this.repository = repository;
-  }
-
-  protected <T> boolean failedBecauseRoomNotFound(String roomName, StreamObserver<T> responseObserver) {
-    Room room = repository.findRoom(roomName);
-    if (room == null) {
-      responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("Room not found: " + roomName)));
-      return true;
+    public ChatStreamServiceImpl(ChatRoomRepository repository) {
+        this.repository = repository;
     }
-    return false;
-  }
 
-  protected Set<StreamObserver<ChatMessageFromServer>> getRoomObservers(String room) {
-    roomObservers.putIfAbsent(room, Collections.newSetFromMap(new ConcurrentHashMap<>()));
-    return roomObservers.get(room);
-  }
+    protected <T> boolean failedBecauseRoomNotFound(String roomName, StreamObserver<T> responseObserver) {
+        Room room = repository.findRoom(roomName);
+        if (room == null) {
+            responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("Room not found: " + roomName)));
+            return true;
+        }
+        return false;
+    }
 
-  protected void removeObserverFromAllRooms(StreamObserver<ChatMessageFromServer> responseObserver) {
-    roomObservers.entrySet().stream().forEach(e -> {
-      e.getValue().remove(responseObserver);
-    });
-  }
+    protected Set<StreamObserver<ChatMessageFromServer>> getRoomObservers(String room) {
+        roomObservers.putIfAbsent(room, Collections.newSetFromMap(new ConcurrentHashMap<>()));
+        return roomObservers.get(room);
+    }
 
-  @Override
-  public StreamObserver<ChatMessage> chat(StreamObserver<ChatMessageFromServer> responseObserver) {
-    final String username = Constant.USER_ID_CTX_KEY.get();
+    protected void removeObserverFromAllRooms(StreamObserver<ChatMessageFromServer> responseObserver) {
+        roomObservers.entrySet().stream().forEach(e -> {
+            e.getValue().remove(responseObserver);
+        });
+    }
 
-    return new StreamObserver<ChatMessage>() {
-      @Override
-      public void onNext(ChatMessage chatMessage) {
+    @Override
+    public StreamObserver<ChatMessage> chat(StreamObserver<ChatMessageFromServer> responseObserver) {
+        // Implemented in Metadata and Interceptors Exercise
+        // final String username = Constant.USER_ID_CTX_KEY.get();
 
-      }
+        return new StreamObserver<ChatMessage>() {
+            @Override
+            public void onNext(ChatMessage chatMessage) {
+                Set<StreamObserver<ChatMessageFromServer>> observers =
+                    getRoomObservers(chatMessage.getRoomName());
+                switch (chatMessage.getType()) {
+                    case JOIN:
+                        observers.add(responseObserver);
+                        break;
+                    case LEAVE:
+                        observers.remove(responseObserver);
+                        break;
+                    case TEXT:
+                        if (!observers.contains(responseObserver)) {
+                            responseObserver.onError(
+                                Status.PERMISSION_DENIED.withDescription("You are not in the room " +
+                                    chatMessage.getRoomName()).asRuntimeException());
+                            return;
+                        }
+                        Timestamp now = Timestamp.newBuilder()
+                            .setSeconds(new Date().getTime()).build();
+                        ChatMessageFromServer messageFromServer =
+                            ChatMessageFromServer.newBuilder()
+                                .setType(chatMessage.getType())
+                                .setTimestamp(now)
+                                .setFrom(chatMessage.getUsername())
+                                .setMessage(chatMessage.getMessage())
+                                .setRoomName(chatMessage.getRoomName())
+                                .build();
+                        observers.stream().forEach(o -> o.onNext(messageFromServer));
+                        break;
+                }
+            }
 
-      @Override
-      public void onError(Throwable throwable) {
+            @Override
+            public void onError(Throwable throwable) {
+                logger.log(Level.SEVERE, "gRPC error", throwable);
+                removeObserverFromAllRooms(responseObserver);
+            }
 
-      }
-
-      @Override
-      public void onCompleted() {
-
-      }
-    };
-  }
+            @Override
+            public void onCompleted() {
+                removeObserverFromAllRooms(responseObserver);
+            }
+        };
+    }
 }

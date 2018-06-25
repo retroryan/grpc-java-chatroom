@@ -103,6 +103,34 @@ public class ChatClient {
     public void initChatStream() {
         // TODO Call chatStreamService.chat(...)
         // TODO and assign the server responseObserver to toServer variable
+
+        this.toServer = chatStreamService.chat(
+            new StreamObserver<ChatMessageFromServer>() {
+                @Override
+                public void onNext(ChatMessageFromServer chatMessageFromServer) {
+                    try {
+                        printLine(console, String.format("\n%tr %s> %s",
+                            chatMessageFromServer.getTimestamp().getSeconds(),
+                            chatMessageFromServer.getFrom(),
+                            chatMessageFromServer.getMessage()));
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    logger.log(Level.SEVERE, "gRPC error", throwable);
+                    shutdown();
+                }
+
+                @Override
+                public void onCompleted() {
+                    logger.severe("server closed connection, shutting down...");
+                    shutdown();
+                }
+            });
     }
 
     protected void prompt() throws Exception {
@@ -213,7 +241,7 @@ public class ChatClient {
             if (this.state.status != ClientStatus.IN_ROOM) {
                 logger.severe("error - not in a room");
             } else {
-                sendMessage(state.room, line);
+                sendMessage(state.username, state.room, line);
             }
         }
     }
@@ -319,10 +347,18 @@ public class ChatClient {
      * @param room
      * @param message
      */
-    private void sendMessage(String room, String message) {
+    private void sendMessage(String username, String room, String message) {
         logger.info("sending chat message");
-        // TODO call toServer.onNext(...)
-        logger.severe("not implemented!");
+        if (toServer == null) {
+            logger.severe("Not connected");
+        }
+
+        toServer.onNext(ChatMessage.newBuilder()
+            .setType(MessageType.TEXT)
+            .setUsername(username)
+            .setRoomName(room)
+            .setMessage(message)
+            .build());
     }
 
     class CurrentState {
