@@ -17,6 +17,7 @@
 package com.example.auth.repository;
 
 import com.example.auth.AuthServer;
+import com.example.auth.EnvVars;
 import com.example.auth.domain.User;
 
 import java.io.*;
@@ -97,7 +98,10 @@ public class UserRepository {
   }
 
   private File getOrCreateFile() throws Exception {
-    File file = new File(FILENAME);
+    String filePath = EnvVars.DATABASE_PATH + "/" + FILENAME;
+    logger.info("loading users database file from path: " + filePath);
+    File file = new File(filePath);
+
     if (!file.exists()) {
       boolean createdFile = file.createNewFile();
       if (!createdFile)

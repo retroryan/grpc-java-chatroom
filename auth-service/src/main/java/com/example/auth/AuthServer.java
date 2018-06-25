@@ -42,7 +42,8 @@ public class AuthServer {
     // TODO Use ServerBuilder to create a new Server instance. Start it, and await termination.
 
     Algorithm algorithm = Algorithm.HMAC256("secret");
-    Server server = ServerBuilder.forPort(9091)
+
+    Server server = ServerBuilder.forPort(EnvVars.AUTH_SERVICE_PORT)
         .addService(new AuthServiceImpl(repository, "auth-issuer", algorithm))
         .build();
 

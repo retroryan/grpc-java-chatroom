@@ -18,6 +18,7 @@ package com.example.chat;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.auth.AuthenticationServiceGrpc;
+import com.example.auth.EnvVars;
 import com.example.chat.grpc.ChatRoomServiceImpl;
 import com.example.chat.grpc.ChatStreamServiceImpl;
 import com.example.chat.grpc.JwtServerInterceptor;
@@ -43,8 +44,8 @@ public class ChatServer {
     // TODO Initial tracer
 
     // TODO Add trace interceptor
-    final ManagedChannel authChannel = ManagedChannelBuilder.forTarget("localhost:9091")
-        .usePlaintext(true)
+    final ManagedChannel authChannel = ManagedChannelBuilder.forTarget(EnvVars.AUTH_SERVICE_URL)
+        .usePlaintext()
         .build();
 
     final AuthenticationServiceGrpc.AuthenticationServiceBlockingStub authService = AuthenticationServiceGrpc.newBlockingStub(authChannel);
@@ -52,7 +53,7 @@ public class ChatServer {
     final ChatStreamServiceImpl chatStreamService = new ChatStreamServiceImpl(repository);
 
     // TODO Add JWT Server Interceptor, then later, trace interceptor
-    final Server server = ServerBuilder.forPort(9092)
+    final Server server = ServerBuilder.forPort(EnvVars.CHAT_SERVICE_PORT)
         .addService(chatRoomService)
         .addService(chatStreamService)
         .build();

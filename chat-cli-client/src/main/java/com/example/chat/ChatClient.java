@@ -75,7 +75,7 @@ public class ChatClient {
     public void initAuthService() {
         logger.info("initializing auth service");
         // TODO Build a new ManagedChannel
-        authChannel = ManagedChannelBuilder.forTarget("localhost:9091")
+        authChannel = ManagedChannelBuilder.forTarget(EnvVars.AUTH_SERVICE_URL)
             .usePlaintext()
             .build();
 
@@ -92,7 +92,7 @@ public class ChatClient {
         logger.info("initializing chat services with token: " + token);
 
         // TODO Add JWT Token via a Call Credential
-        chatChannel = ManagedChannelBuilder.forTarget("localhost:9092")
+        chatChannel = ManagedChannelBuilder.forTarget(EnvVars.CHAT_SERVICE_URL)
             .usePlaintext()
             .build();
 
