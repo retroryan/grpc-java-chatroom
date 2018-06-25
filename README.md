@@ -1,5 +1,4 @@
 gRPC Java Workshop
 ------------------
 
-See [instructions](bit.ly/grpc-java-lab-doc)
-
+See [instructions](http://retroryan8080.gitlab.io/grpc-java-workshop/)
