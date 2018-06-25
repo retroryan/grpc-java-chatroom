@@ -19,14 +19,19 @@ package com.example.auth.grpc;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.example.auth.*;
+import com.example.auth.domain.User;
 import com.example.auth.repository.UserRepository;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 
 /**
  * Created by rayt on 6/27/17.
  */
 // TODO Extend gRPC's AuthenticationServiceBaseImpl
-public class AuthServiceImpl {
+public class AuthServiceImpl extends AuthenticationServiceGrpc.AuthenticationServiceImplBase {
   private final UserRepository repository;
   private final String issuer;
   private final Algorithm algorithm;
@@ -53,6 +58,42 @@ public class AuthServiceImpl {
   }
 
   // TODO Override authenticate methods
+  @Override
+  public void authenticate(AuthenticationRequest request, StreamObserver<AuthenticationResponse> responseObserver) {
+    User user = repository.findUser(request.getUsername());
+
+    if (user == null || !user.getPassword().equals(request.getPassword())) {
+      responseObserver.onError(Status.UNAUTHENTICATED.asRuntimeException());
+      return;
+    }
+    String token = generateToken(request.getUsername());
+    responseObserver.onNext(AuthenticationResponse.newBuilder()
+        .setToken(token)
+        .build());
+    responseObserver.onCompleted();
+  }
 
   // TODO Override authorization method
+  public void authorization(AuthorizationRequest request, StreamObserver<AuthorizationResponse> responseObserver) {
+    try {
+      DecodedJWT jwt = jwtFromToken(request.getToken());
+
+      String username = jwt.getSubject();
+      User user = repository.findUser(username);
+
+      if (user == null) {
+        // send error
+        return;
+      }
+
+      responseObserver.onNext(AuthorizationResponse.newBuilder()
+          .addAllRoles(user.getRoles())
+          .build());
+      responseObserver.onCompleted();
+
+    } catch (JWTVerificationException e) {
+      responseObserver.onError(Status.UNAUTHENTICATED.asRuntimeException());
+      return;
+    }
+  }
 }

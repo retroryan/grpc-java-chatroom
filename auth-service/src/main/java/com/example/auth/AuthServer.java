@@ -17,7 +17,10 @@
 package com.example.auth;
 
 import com.auth0.jwt.algorithms.Algorithm;
+import com.example.auth.grpc.AuthServiceImpl;
 import com.example.auth.repository.UserRepository;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -37,5 +40,23 @@ public class AuthServer {
     final UserRepository repository = createRepository();
 
     // TODO Use ServerBuilder to create a new Server instance. Start it, and await termination.
+
+    Algorithm algorithm = Algorithm.HMAC256("secret");
+    Server server = ServerBuilder.forPort(9091)
+        .addService(new AuthServiceImpl(repository, "auth-issuer", algorithm))
+        .build();
+
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        server.shutdownNow();
+      }
+    });
+
+    server.start();
+    logger.info("Server started on port 9091");
+
+    server.awaitTermination();
+    
   }
 }
