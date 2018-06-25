@@ -31,6 +31,7 @@
         <os.plugin.version>1.5.0.Final</os.plugin.version>
         <protobuf.plugin.version>0.5.0</protobuf.plugin.version>
         <protoc.version>3.5.1</protoc.version>
+        <docker.image.prefix>retroryan</docker.image.prefix>
     </properties>
     <modules>
         <module>auth-service</module>
@@ -133,6 +134,25 @@
                         </execution>
                     </executions>
                 </plugin>
+
+                <plugin>
+                    <groupId>com.spotify</groupId>
+                    <artifactId>dockerfile-maven-plugin</artifactId>
+                    <version>1.3.5</version>
+                    <configuration>
+                        <repository>${docker.image.prefix}/${project.artifactId}-java</repository>
+                        <tag>1.0</tag>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>build</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
             </plugins>
         </pluginManagement>
     </build>
