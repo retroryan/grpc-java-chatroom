@@ -39,6 +39,7 @@ message ChatMessage {
     MessageType type = 1;
     string roomName = 10;
     string message = 11;
+    string username = 12;
 }
 
 message ChatMessageFromServer {
