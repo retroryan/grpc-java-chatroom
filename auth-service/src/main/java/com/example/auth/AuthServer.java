@@ -57,6 +57,6 @@ public class AuthServer {
     logger.info("Server started on port 9091");
 
     server.awaitTermination();
-    
+
   }
 }
