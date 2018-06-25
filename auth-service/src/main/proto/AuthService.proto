@@ -20,8 +20,27 @@ package com.example.auth;
 option java_multiple_files = true;
 
 // 2. Add the message definitions
-
-// 3. Add the service definitions
-service AuthenticationService {
+message AuthenticationRequest {
+    string username = 1;
+    string password = 2;
 }
 
+message AuthenticationResponse {
+    string token = 1;
+}
+
+message AuthorizationRequest {
+    string token = 1;
+}
+
+message AuthorizationResponse {
+    string username = 1;
+    repeated string roles = 2;
+}
+
+// 3. Add the service definitions
+
+service AuthenticationService {
+    rpc authenticate(AuthenticationRequest) returns (AuthenticationResponse);
+    rpc authorization(AuthorizationRequest) returns (AuthorizationResponse);
+}
